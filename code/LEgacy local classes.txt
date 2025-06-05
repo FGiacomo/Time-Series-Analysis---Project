@@ -1,0 +1,51 @@
+def load_or_download_data(tickers, start, end, pickle_dir='../data', csv_dir='../data/csv'):
+    # Ensure output directories exist
+    os.makedirs(pickle_dir, exist_ok=True)
+    os.makedirs(csv_dir, exist_ok=True)
+
+    try:
+        # Try downloading data
+        data = yf.download(tickers, start=start, end=end, group_by='ticker')
+
+        # Check if data was returned for all tickers
+        for ticker in tickers:
+            if data[ticker].isnull().all().all():
+                raise ValueError(f"No data downloaded for {ticker}")
+
+        # Save data to both pickle and CSV
+        for ticker in tickers:
+            base_name = convert_ticker_name(ticker)
+            
+            # Save as pickle
+            with open(os.path.join(pickle_dir, f'{base_name}.pkl'), 'wb') as f:
+                pickle.dump(data[ticker], f)
+            
+            # Save as CSV
+            data[ticker].to_csv(os.path.join(csv_dir, f'{base_name}.csv'))
+
+        print("Data downloaded and saved successfully.")
+        return {convert_ticker_name(t): data[t] for t in tickers}
+
+    except Exception as e:
+        print(f"Download failed. Loading from CSV. Reason: {e}")
+
+        # Load from CSV instead
+        loaded_data = {}
+        for ticker in tickers:
+            base_name = convert_ticker_name(ticker)
+            file_path = os.path.join(csv_dir, f'{base_name}.csv')
+            if os.path.exists(file_path):
+                df = pd.read_csv(file_path, index_col=0, parse_dates=True)
+                loaded_data[base_name] = df
+            else:
+                print(f"Missing local file: {file_path}")
+        return loaded_data
+
+def convert_ticker_name(ticker):
+    # Convert special tickers to safe filenames
+    return ticker.replace('^', '').replace('=', '').replace('-', '').lower()
+
+
+
+# Access like:
+# data_dict['gspc'], data_dict['pltr'], etc.
