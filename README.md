@@ -42,7 +42,11 @@ The project includes:
 
 ## 📂 Structure
 ├── data/ # Raw and preprocessed financial time series
+
 ├── notebooks/ # Jupyter notebooks with full analysis
+
 ├── models/ # Model estimation and diagnostics output
+
 ├── reports/ # Summary slides and results
+
 └── README.md # Project documentation
